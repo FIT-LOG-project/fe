@@ -1,12 +1,14 @@
 import { Outlet } from "react-router-dom";
+import Header from "./components/Header";
+import { Stack } from "@mui/material";
 
 function App() {
   return (
     <>
-      <div>
-        <h1>루트 화면</h1>
-        <Outlet></Outlet>
-      </div>
+      <Stack spacing={2}>
+          <Header />
+          <Outlet></Outlet>
+      </Stack>
     </>
   );
 }
