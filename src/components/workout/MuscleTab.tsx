@@ -1,24 +1,43 @@
 import { Box, Tab, Tabs } from "@mui/material";
 import { Muscle } from "../../models/Muscle";
+import { useEffect, useState } from "react";
+import instance from "../../api/axiosInstance";
 
 interface Props {
-    muscleValue: number,
-    handleChangeMuscleValue: (event: React.SyntheticEvent, newTarget: number)=>void
+  muscleValue: number;
+  handleChangeMuscleValue: (
+    event: React.SyntheticEvent,
+    newTarget: number
+  ) => void;
 }
 
-export default function MuscleTab({muscleValue, handleChangeMuscleValue}: Props) {
+export default function MuscleTab({
+  muscleValue,
+  handleChangeMuscleValue,
+}: Props) {
+  const [muscles, setMuscles] = useState<Muscle[]>([]);
 
-  const muscles: Muscle[] = [
-    new Muscle(0, "전체"),
-    new Muscle(1, "가슴"),
-    new Muscle(2, "등"),
-    new Muscle(3, "하체"),
-    new Muscle(4, "팔"),
-    new Muscle(5, "복근"),
-  ];
+  const getMuscles = async () => {
+    instance
+      .get("muscle")
+      .then(function (response) {
+        response.data.data.splice(0, 0, {
+          id: 0,
+          name: "전체",
+        });
+        setMuscles(response.data.data);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  };
+
+  useEffect(() => {
+    getMuscles();
+  }, []);
 
   const muscleList = muscles.map((muscle) => (
-    <Tab label={muscle.getName()}></Tab>
+    <Tab label={muscle.name} key={muscle.id}></Tab>
   ));
 
   return (
@@ -26,7 +45,7 @@ export default function MuscleTab({muscleValue, handleChangeMuscleValue}: Props)
       <Box
         sx={{
           borderBottom: 1,
-          borderColor: "divider"
+          borderColor: "divider",
         }}
       >
         <Tabs value={muscleValue} onChange={handleChangeMuscleValue}>

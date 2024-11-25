@@ -6,7 +6,8 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import instance from "../../api/axiosInstance";
 import { Workout } from "../../models/Workout";
 
 interface Props {
@@ -16,6 +17,8 @@ interface Props {
 
 export default function WorkoutList({ muscleValue, searchValue }: Props) {
   const [checked, setChecked] = useState([0]);
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [filterdWorkouts, setFilteredWorkouts] = useState<Workout[]>([]);
 
   const handleToggle = (workoutId: number) => () => {
     const currentIndex = checked.indexOf(workoutId);
@@ -30,44 +33,38 @@ export default function WorkoutList({ muscleValue, searchValue }: Props) {
     setChecked(newChecked);
   };
 
-  const workouts: Workout[] = [
-    new Workout(1, "벤치프레스", 1),
-    new Workout(2, "랫풀다운", 2),
-    new Workout(3, "스쿼트", 3),
-    new Workout(4, "바벨 컬", 5),
-    new Workout(5, "바벨 컬1", 5),
-    new Workout(6, "바벨 컬2", 5),
-    new Workout(7, "바벨 컬3", 5),
-    new Workout(8, "바벨 컬4", 5),
-    new Workout(9, "바벨 컬5", 5),
-    new Workout(10, "바벨 컬6", 5),
-    new Workout(11, "바벨 컬7", 5),
-    new Workout(12, "바벨 컬8", 5),
-    new Workout(13, "바벨 컬9", 5),
-    new Workout(14, "바벨 컬10", 5),
-    new Workout(15, "바벨 컬11", 5),
-    new Workout(16, "바벨 컬12", 5),
-    new Workout(17, "바벨 컬13", 5),
-    new Workout(18, "바벨 컬14", 5),
-    new Workout(19, "바벨 컬15", 5),
-    new Workout(20, "바벨 컬16", 5),
-  ];
+  const getWorkout = async () => {
+    await instance
+      .get("workout")
+      .then(function (response) {
+        setWorkouts(response.data.data);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  };
 
-  let workoutFilter = workouts.filter((workout: Workout) => {
-    if (muscleValue == 0) {
-      return workouts;
-    }
+  useEffect(() => {
+    getWorkout();
+  }, []);
 
-    return workout.getMuscleId() == muscleValue;
-  });
+  const filterWorkouts = (): Workout[] => {
+    return workouts.filter((workout) => {
+      const muscleMatch: boolean =
+        muscleValue === 0 || workout.muscleId === muscleValue;
+      const nameMatch: boolean = workout.name.includes(searchValue);
 
-  workoutFilter = workoutFilter.filter((workout: Workout) => {
-    return workout.getName().includes(searchValue);
-  });
+      return muscleMatch && nameMatch;
+    })
+  }
 
-  const listWorkouts = workoutFilter.map((workout: Workout) => (
+  useEffect(() => {
+    setFilteredWorkouts(filterWorkouts());
+  }, [muscleValue, searchValue, workouts]);
+
+  const listWorkouts = filterdWorkouts.map((workout: Workout) => (
     <ListItem
-      key={workout.getId()}
+      key={workout.id}
       sx={{
         paddingX: 0,
         height: "64px",
@@ -76,26 +73,26 @@ export default function WorkoutList({ muscleValue, searchValue }: Props) {
     >
       <ListItemButton
         role={undefined}
-        onClick={handleToggle(workout.getId())}
+        onClick={handleToggle(workout.id)}
         sx={{
           paddingX: "5px",
         }}
       >
         <ListItemIcon
           sx={{
-            minWidth: '30px',
+            minWidth: "30px",
           }}
         >
           <Checkbox
             edge="start"
-            checked={checked.includes(workout.getId())}
+            checked={checked.includes(workout.id)}
             tabIndex={-1}
             disableRipple
             size="small"
           />
         </ListItemIcon>
 
-        <ListItemText>{workout.getName()}</ListItemText>
+        <ListItemText>{workout.name}</ListItemText>
       </ListItemButton>
     </ListItem>
   ));
